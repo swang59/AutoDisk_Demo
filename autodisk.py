@@ -26,7 +26,8 @@ from scipy import stats,signal
 # lattice strain mapping.
 #
 # For details about the method, please refer to the manuscript:
-# "AutoDisk: Automated Diffraction Processing and Strain Mapping in 4D-STEM".
+# "AutoDisk: Automated Diffraction Processing and Strain Mapping in 4D-STEM"
+# by Sihan Wang, Tim Eldred, Jacob Smith and Wenpei Gao.
 ###################################################################
 
 
@@ -55,17 +56,17 @@ def visual(image,plot = True):
 
 def readData(dname):   
     """
-    Read in 4D-STEM data file.
+    Read in a 4D-STEM data file.
     
     Parameters
     ----------
     dname : str
-        The name of the data file
+        The name of the data file.
 
     Returns
     -------
     data: 4D array of int or float
-        The read-in 4D-STEM data
+        The read-in 4D-STEM data.
     
     """
     dimy = 130
@@ -90,11 +91,11 @@ def savePat(out_dir, data, ext ='.tif'):
     Parameters
     ----------
     out_dir : str
-        Folder name
+        The name of the save folder.
     data : 2D array of int or float
-        Array of a 4D dataset
+        Array of a 4D dataset.
     ext : str, optional
-        Extension of the output pattern. The default is '.tif'
+        Extension of the output pattern. The default is '.tif'.
 
     Returns
     -------
@@ -114,16 +115,16 @@ def savePat(out_dir, data, ext ='.tif'):
 
 def generateAdf(data,in_rad,out_rad,save=False): 
     """
-    Generate ADF image from the diffraction patterns
+    Generate an annular dark-field image from the diffraction patterns.
 
     Parameters
     ----------
     data : 4D array of int or float
-        4D dataset
+        The 4D dataset.
     in_rad : int
-        Inner collection angle in rad
+        Inner collection angle.
     out_rad : int
-        Outer collection angle in rad
+        Outer collection angle.
 
     Returns
     -------
@@ -162,7 +163,7 @@ def generateAvg(data):
     Parameters
     ----------
     data : 4D array of int or float
-        Array of the 4D dataset
+        Array of the 4D dataset.
 
     Returns
     -------
@@ -183,7 +184,7 @@ def generateAvg(data):
 
 def ctrRadiusIni(pattern):
     """
-    Find the center and the radius of the center disk.
+    Find the center coordinate and the radius of the zero-order disk.
 
     Parameters
     ----------
@@ -193,9 +194,9 @@ def ctrRadiusIni(pattern):
     Returns
     -------
     ctr : 1D array of int or float
-        Array of the center coordinates [row,col]
+        Array of the center coordinates [row,col].
     avg_r : float
-        Radius of the center disk
+        Radius of the center disk in unit of pixels.
 
     """
     h,w = pattern.shape
@@ -228,16 +229,16 @@ def ctrRadiusIni(pattern):
 
 def genrateKernel(pattern,ctr,r,c=0.7,pad=2,pre_def = False):
     """
-    Generate the kernel fofr cross-correlation based on thee center disk.
+    Generate the kernel for cross-correlation based on thee center disk.
 
     Parameters
     ----------
     pattern : 2D array of int or float
-        An array of a diffraction pattern
+        An array of a diffraction pattern.
     ctr : 1D array of float
-        Array of the row and column coordinates of the center
+        Array of the row and column coordinates of the center.
     r : float
-        Radius of a disk
+        Radius of a disk.
     c : float, optional
         An coefficient to modify the kernel size. The default is 0.7.
     pad : int, optional
@@ -300,14 +301,14 @@ def crossCorr(pattern,kernel):
     Parameters
     ----------
     pattern : 2D array of int or float
-        The array of a diffraction pattern to be cross correlated
+        Array of a diffraction pattern to be cross correlated.
     kernel : 2D array of float
-        Array of the kernel
+        Array of the kernel.
 
     Returns
     -------
     cro_img_out : 2D array
-        Cross correlated map of the input pattern
+        Cross correlated result of the input pattern.
 
     """
     cro_cor_img = signal.correlate2d(pattern, kernel, boundary='symm', mode='same')
@@ -319,11 +320,28 @@ def crossCorr(pattern,kernel):
 
 
 def same_padding(img,kernel):
+    """
+    Generate a padding outside of the image with the average intensity on the boundary of the image.
+
+    Parameters
+    ----------
+    img : 2D array of int or float
+        Array of the image.
+    kernel : 2D array of float
+        Array of the kernel.
+
+    Returns
+    -------
+    constant : 2D array
+        The image with a constant padding.
+        
+    """
     f_size = len(kernel)
     constant = np.empty((img.shape[0]+2*f_size,img.shape[1]+2*f_size))
     bcgd = np.mean(img[:f_size,f_size:])
     constant[0:f_size,:] = constant[-f_size:img.shape[0]+2*f_size,:] = constant[:,0:f_size] = constant[:,f_size:img.shape[1]+2*f_size] = bcgd
     constant[f_size:img.shape[0]+f_size,f_size:img.shape[1]+f_size] = img
+    
     return constant
 
 
@@ -335,11 +353,11 @@ def ctrDet(pattern, r, kernel, n_sigma=10, thred=0.1, ovl=0):
     Parameters
     ----------
     pattern : 2D array of int or float
-        A diffraction pattern
+        A diffraction pattern.
     r : float
-        Radius of a disk
+        Radius of a disk.
     kernel : 2D array of float
-        Kernel used for cross correlation
+        Kernel used for cross correlation.
     n_sigma : int, optional
         The number of intermediate values of standard deviations. The default is 10.
     thred : float, optional
@@ -350,7 +368,7 @@ def ctrDet(pattern, r, kernel, n_sigma=10, thred=0.1, ovl=0):
     Returns
     -------
     blobs : 2D array of int
-        Detected disk position corrdinates.
+         Corrdinates of the detected disk position.
 
     """
     adjr = r * 0.5
@@ -372,8 +390,7 @@ def ctrDet(pattern, r, kernel, n_sigma=10, thred=0.1, ovl=0):
             rem.append(i)
     
     blobs_log_out = np.delete(blobs_log, rem, axis =0)
-    blobs_log_out -= f_size
-    
+    blobs_log_out -= f_size 
     
     blobs =  blobs_log_out[:,:2].astype(int)
     
@@ -388,9 +405,9 @@ def radGradMax(sample, blobs, r, rn=20, ra=2, n_p=40, threshold=3):
     Parameters
     ----------
     sample : 2D array of float or int
-        The diffraction pattern
+        The diffraction pattern.
     blobs : 2D array of int or floats
-        Blob coordinates
+        Blob coordinates.
     r : float
         Radius of the disk
     rn : int, optional
@@ -400,7 +417,7 @@ def radGradMax(sample, blobs, r, rn=20, ra=2, n_p=40, threshold=3):
     n_p : int, optional
         The number of sampling points on a ring. The default is 40.
     threshold : float, optional
-        A threshold to filte out outliers, the smaller the threshold is, the more outliers are detected. The default is 3.
+        A threshold to filter out outliers. The smaller the threshold is, the more outliers are detected. The default is 3.
 
     Returns
     -------
@@ -466,16 +483,16 @@ def detAng(ref_ctr,ctr,r): # threshold: accepted angle difference
     ref_ctr : 2D array of float
         Array of disk position coordinates and their corresponding weights
     ctr : 1D array of float
-        Center of the center disk
+        Center of the zero-order disk.
     r : float
-        Radius of the disks
+        Radius of the disks.
 
     Returns
     -------
     wt_ang : float
-        The angle detected
+        The rotation angle.
     ref_ctr : 2D array of float
-        Refined disk positions
+        Refined disk positions.
 
     """
     ctr_vec = ref_ctr[:,:2] - ctr
@@ -532,7 +549,7 @@ def detAng(ref_ctr,ctr,r): # threshold: accepted angle difference
     
     for i in range (len(all_ref)):
         if all_ref[i]<0:
-            all_ref[i] = (180 + all_ref[i]) 
+            all_ref[i] = 180 + all_ref[i]
         elif all_ref[i] >= 180:
             all_ref[i] = 180 - all_ref[i]
         
@@ -550,16 +567,16 @@ def rotImg(image, angle, ctr):
     Parameters
     ----------
     image : 2D array of int or float
-        Input pattern.
+        The input pattern.
     angle : float
         An angel to rotate.
     ctr : 1D array of int or float
-        Rotation center.
+        The rotation center.
 
     Returns
     -------
     result : 2D array of int or float
-        Rotated pattern.
+        The rotated pattern.
 
     """
     image_center = tuple(np.array([ctr[0],ctr[1]]))
@@ -579,14 +596,14 @@ def rotCtr(pattern,ref_ctr,angle):
     pattern : 2D array of int or float
         A diffraction pattern.
     ref_ctr : 2D array of float
-        Array of the detected disk positions
+        Array of the detected disk positions.
     angle : float
-        Detected angle to rotate
+        Detected angle to rotate.
 
     Returns
     -------
     ctr_new : 2D array of float
-        The transformed disks positions
+        The transformed disk positions.
 
     """
     h,w = pattern.shape
@@ -603,8 +620,7 @@ def rotCtr(pattern,ref_ctr,angle):
         if y_new>0 and x_new>0 and y_new<h and x_new<w:
             ctr_new.append([y_new,x_new,ref_ctr[i,2]])
     
-    ctr_new = np.array(ctr_new)
-    
+    ctr_new = np.array(ctr_new)    
 
     return ctr_new
 
@@ -612,19 +628,19 @@ def rotCtr(pattern,ref_ctr,angle):
 
 def groupY (load_ctr,r):
     """
-    Group disks based on their row coordinates
+    Group disks based on their row coordinates.
 
     Parameters
     ----------
     load_ctr : 2D array of float
-        Array of disk positions
+        Array of disk positions.
     r : float
-        Radius of the disks
+        Radius of the disks.
 
     Returns
     -------
     g_y : a list of arrays of float
-        A list with each element as a group of disk positions
+        A list with each element as a group of disk positions.
 
     """
     n = len(load_ctr)
@@ -659,11 +675,11 @@ def latFit(pattern,rot_ref_ctr,r):
     Parameters
     ----------
     pattern : 2D array of int or float
-        A diffraction pattern
+        A diffraction pattern.
     rot_ref_ctr : 2D array of float
-        Array of the disks positionss
+        Array of the disks positionss.
     r : float
-        Radius of the disks
+        Radius of the disks.
 
     Returns
     -------
@@ -672,11 +688,11 @@ def latFit(pattern,rot_ref_ctr,r):
     vec_b_ref : 1D array of float
         The estimated non-horizontal lattice vector [y component, x component].
     result_ctr : 2D array of float
-        Array of the refined disk positions
+        Array of the refined disk positions.
     lat_ctr_arr : 2D array of float
-        The array of the positions of disks in the middle row
+        The array of the positions of disks in the middle row.
     avg_ref_ang : float
-        Refined rotation angle
+        Refined rotation angle.
 
     """
     
@@ -690,7 +706,7 @@ def latFit(pattern,rot_ref_ctr,r):
     lat_ctr = []
     avg_ref_ang = 0
     
-    ########## Sort y values in each group and refine the angle
+    ########## Sort y values in each group and refine the angle ##########
     ref_ang = []
     for ea_g in g_y:
         if len(ea_g)>1:
@@ -781,7 +797,7 @@ def latFit(pattern,rot_ref_ctr,r):
                 
                 vec_a = np.array([0, sum_x/count])
                 
-                #### Find vector b #
+                ######### Find vector b #########
                 set_ct_ind = np.argmax(result_ctr[:,2])
                 set_ct = result_ctr[set_ct_ind]
                 
@@ -803,7 +819,7 @@ def latFit(pattern,rot_ref_ctr,r):
                 h,w = pattern.shape 
                 lat_ctr = [set_ct[:2]]
                 
-                ###### Generate pts along vector a (middle row) #####
+                ###### Generate pts along vector a (middle row) ######
                 # one side    
                 cur_h1 = set_ct[0]
                 cur_w1 = set_ct[1]
@@ -825,15 +841,14 @@ def latFit(pattern,rot_ref_ctr,r):
                         lat_ctr.append([cur_h2,cur_w2])     
                         
                         
-                ######### Refine Vector b
+                ######### Refine Vector b #########
                 vec_b = nn_vecb_rough - set_ct
                 if  vec_b[0]<0:
                     vec_b = -vec_b
             
                 vec_b_rough = vec_b [:2]
             
-                diff_y_ref = []
-                
+                diff_y_ref = []   
 
                 look_y = set_ct[0]-vec_b_rough[0]
                 est_ct = lat_ctr - vec_b_rough 
@@ -849,7 +864,6 @@ def latFit(pattern,rot_ref_ctr,r):
                     look_y -= vec_b_rough[0]
                     est_ct -= vec_b_rough
         
-
                 look_y = set_ct[0]+vec_b_rough[0]
                 est_ct = lat_ctr + vec_b_rough
                 while look_y<h:
@@ -863,15 +877,13 @@ def latFit(pattern,rot_ref_ctr,r):
                             cum_row = round(np.abs(np.mean(each[:][0])-set_ct[0])/vec_b_rough[0])
                             diff_y_ref.append(each_diff_xy[np.argmin(each_dis)]/cum_row)   
                     look_y += vec_b_rough[0]
-                    est_ct += vec_b_rough
-        
+                    est_ct += vec_b_rough      
                  
                 vec_b_ref = vec_b_rough*1.0
                 if len(diff_y_ref)==0:
                     diff_y_ref.append([0,0])
                 diff_y_ref = np.array(diff_y_ref)        
                 vec_b_ref[1] = vec_b_ref[1] + np.mean(diff_y_ref[:,1])
-
     
     lat_ctr_arr = np.array(lat_ctr)
     return vec_a, vec_b_ref, result_ctr, lat_ctr_arr, avg_ref_ang
@@ -886,20 +898,20 @@ def genLat(pattern, ret_a,ret_b, mid_ctr,r):
     Parameters
     ----------
     pattern : 2D array of int or float
-        A diffraction pattern
+        A diffraction pattern.
     ret_a : 1D array of float
-        The horizontal lattice vector
+        The horizontal lattice vector a.
     ret_b : 1D array of float
-        The non-horizontal lattice vector
+        The non-horizontal lattice vector b.
     mid_ctr : a list of arrays of float
-        a list of disk positions which are in the middle row
+        a list of disk positions which are in the middle row.
     r : float
-        Radius of the disks
+        Radius of the disks.
 
     Returns
     -------
     final_ctr : 2D array of float
-        Refined disk positions
+        Disk positions in the hypothetical lattice.
 
     """
     img = pattern
@@ -931,7 +943,7 @@ def genLat(pattern, ret_a,ret_b, mid_ctr,r):
                 cur_ct2 = [cur_h2,cur_w2]
                 final_ctr.append([cur_h2,cur_w2])  
 
-    ######   Check Again ##########
+    ########   Check Again ########
     chk_lat_ctr= final_ctr
     
     for cur_vec2_ct in chk_lat_ctr:
@@ -959,8 +971,7 @@ def genLat(pattern, ret_a,ret_b, mid_ctr,r):
                 dif_chk2 = [(ct[0]-cur_ct2[0])**2+(ct[1]-cur_ct2[1])**2 for ct in chk_lat_ctr]
                 if min(dif_chk2)> r**2:  
                     final_ctr.append([cur_h2,cur_w2])   
-                    
-                    
+                                 
     for pt in mid_ctr:
         final_ctr.append(pt)
     
@@ -972,21 +983,21 @@ def genLat(pattern, ret_a,ret_b, mid_ctr,r):
 
 def delArti(gen_lat_pt,ref_ctr,r):
     """
-    Delete any artificial lattice points
+    Delete any artificial lattice points.
 
     Parameters
     ----------
     gen_lat_pt : 2D array of float
-        Array of artificial disk positions
+        Array of artificial disk positions.
     ref_ctr : 2D array of float
-        Array of detected disk positions
+        Array of detected disk positions.
     r : float
-        Radius of the disks
+        Radius of the disks.
 
     Returns
     -------
     gen_lat_pt_up : 2D array of float
-        A filtered array of disk positions
+        A filtered array of disk positions.
 
     """
     gen_lat_pt_up = []
@@ -1004,23 +1015,23 @@ def delArti(gen_lat_pt,ref_ctr,r):
 
 def latBack(refe_a,refe_b,angle):
     """
-    Represent the lattice vectors in the default coordinate system
+    Transform the lattice vectors to the default coordinate system.
 
     Parameters
     ----------
     refe_a : 1D array of float
-        Array of the vector a
+        Array of the vector a.
     refe_b : 1D array of float
-        Array of the vector b
+        Array of the vector b.
     angle : float
-        Rotation angle
+        The rotation angle.
 
     Returns
     -------
     a_init : 1D array of float
-        Transformed array of the vector a
+        Transformed array of the vector a.
     b_init : 1D array of float
-        Transformed array of the vector b
+        Transformed array of the vector b.
 
     """
     ang_init_back = angle*np.pi/180
@@ -1033,16 +1044,16 @@ def latBack(refe_a,refe_b,angle):
 
 def drawCircles(ori_pattern,blobs_list,r):
     """
-    Label the disk positions on the pattern
+    Label the disk positions on the pattern.
 
     Parameters
     ----------
     ori_pattern : 2D array of int or float
-        The pattern to be labeled on
+        The pattern to be labeled on.
     blobs_list : 2D array of floatss
-        Array of disk positions
+        Array of disk positions.
     r: float
-        The radius of the disks
+        The radius of the disks.
 
     Returns
     -------
@@ -1070,24 +1081,24 @@ def drawCircles(ori_pattern,blobs_list,r):
 
 def latDist(lat_par,refe_a,refe_b,err=0.2):
     """
-    This function filters out the outliers of the lattice parameters based on the references
+    This function filters out the outliers of the lattice parameters based on the references.
 
     Parameters
     ----------
     lat_par : 2D array of arrays of floats
-        2D array with each element as two arrays of lattice vectors
+        2D array with each element as two arrays of lattice vectors.
     refe_a : 1D array of float
-        Reference lattice vector a
+        The reference lattice vector a.
     refe_b : 1D array of float
-        Reference lattice vector b
+        The reference lattice vector b.
     err : float, optional
-        Acceptable error percentage. The default is 0.2.
+        Acceptable error percentage. The default is 0.2 (20%).
 
     Returns
     -------
     store_whole : 3D array of float
-        Array storing 3 columns, y coordinate, x coordinate, and 4 lattice vector elements
-        (y of vector a, x of vector a, y of vector b, x of vector b)
+        Array containing 3 columns, y coordinate, x coordinate, and 4 lattice vector elements
+        (y of vector a, x of vector a, y of vector b, x of vector b).
 
     """
     arr_vec = lat_par
@@ -1106,7 +1117,6 @@ def latDist(lat_par,refe_a,refe_b,err=0.2):
     acc_bx_max = std_bx*(1+err) if std_bx>0 else std_bx*(1-err)
     acc_by_min = std_by*(1-err) if std_by>0 else std_by*(1+err)
     acc_by_max = std_by*(1+err) if std_by>0 else std_by*(1-err)
-    
     
     store_whole = np.zeros((sm_y,sm_x,4),dtype = float)
 
@@ -1129,8 +1139,7 @@ def latDist(lat_par,refe_a,refe_b,err=0.2):
                 store_whole[row,col][0] = gay        
                 store_whole[row,col][1] = gax
                 store_whole[row,col][2] = gby
-                store_whole[row,col][3] = gbx
-                
+                store_whole[row,col][3] = gbx                
 
     return store_whole       
 
@@ -1138,30 +1147,30 @@ def latDist(lat_par,refe_a,refe_b,err=0.2):
 
 def calcStrain(lat_fil, refe_a,refe_b):
     """
-    Compute strain maps
+    Compute strain maps.
     
 
     Parameters
     ----------
     lat_fil : 2D array of arrays of float
-        2D array with each element as two lattice vectors
+        2D array with each element as two lattice vectors.
     refe_a : 1D array of float 
-        Reference vector a
+        The reference vector a.
     refe_b : 1D array of float
-        Reference vector b
+        The reference vector b.
 
     Returns
     -------
     st_xx : 2D array of float
-        Estimated strain along the x direction
+        Estimated strain along the x direction.
     st_yy : 2D array of float
-        Estimated strain along the y direction
+        Estimated strain along the y direction.
     st_xy : 2D array of float
-        DESCRIPTION.
+        Shear strain.
     st_yx : 2D array of float
-        DESCRIPTION.
+        Shear strain.
     tha_ang : 2D array of float
-        DESCRIPTION.
+        Angle of lattice rotation in deg.
 
     """
     sm_y,sm_x = lat_fil.shape[:2]
