@@ -33,12 +33,13 @@ from scipy import stats,signal
 
 def visual(image,plot = True):
     """
-    Convert a 2D array of int or flost to an int8 array of image and visualize it.
+    Convert a 2D array of int or float to an int8 array of image and visualize it.
 
     Parameters
     ----------
     image : 2D array of int or float
-    plot : Ture if the image need to be ploted. The default is True.
+    plot : bool, optional
+        Ture if the image need to be ploted. The default is True.
 
     Returns
     -------
@@ -61,7 +62,7 @@ def readData(dname):
     Parameters
     ----------
     dname : str
-        The name of the data file.
+        Name of the data file.
 
     Returns
     -------
@@ -319,7 +320,7 @@ def crossCorr(pattern,kernel):
 
 
 
-def same_padding(img,kernel):
+def samePadding(img,kernel):
     """
     Generate a padding outside of the image with the average intensity on the boundary of the image.
 
@@ -373,7 +374,7 @@ def ctrDet(pattern, r, kernel, n_sigma=10, thred=0.1, ovl=0):
     """
     adjr = r * 0.5
     
-    img = same_padding(pattern,kernel)  
+    img = samePadding(pattern,kernel)  
     sh,sw = img.shape
 
     blobs_log = blob_log(img, 
@@ -406,7 +407,7 @@ def radGradMax(sample, blobs, r, rn=20, ra=2, n_p=40, threshold=3):
     ----------
     sample : 2D array of float or int
         The diffraction pattern.
-    blobs : 2D array of int or floats
+    blobs : 2D array of int or float
         Blob coordinates.
     r : float
         Radius of the disk
@@ -670,7 +671,7 @@ def groupY (load_ctr,r):
 
 def latFit(pattern,rot_ref_ctr,r):  
     """
-    Lattice fitting process
+    Lattice fitting process.
 
     Parameters
     ----------
@@ -694,8 +695,7 @@ def latFit(pattern,rot_ref_ctr,r):
     avg_ref_ang : float
         Refined rotation angle.
 
-    """
-    
+    """ 
     load_ctr = rot_ref_ctr*1
     g_y = groupY(load_ctr,r)
     
@@ -745,8 +745,7 @@ def latFit(pattern,rot_ref_ctr,r):
             cur_y = rot_ref_ctr2[j,0]
             d_y = [np.abs(s-cur_y) for s in ref_y]
             min_y_ind = np.argmin(d_y)
-            result_ctr[j][0] = ref_y[min_y_ind]
-        
+            result_ctr[j][0] = ref_y[min_y_ind]     
         
         ################ Vec a #######################    
         x_g = []    
@@ -780,7 +779,6 @@ def latFit(pattern,rot_ref_ctr,r):
                 for idx in range (len(each_g)):
                     if each_g[idx,1]<lower_bound or each_g[idx,1]>upper_bound:
                         each_g_mod = np.delete(each_g,idx,axis = 0)               
-
                 
                 if len(each_g_mod)>0:
                     cur_mean = np.mean(each_g_mod[:,1],axis=0)
@@ -812,8 +810,7 @@ def latFit(pattern,rot_ref_ctr,r):
                         xy_min = np.min(dis_norm)
                         if xy_min<=min_nn:  
                             min_nn = xy_min 
-                            nn_vecb_rough = cur_ct[np.argmin(dis_norm)]
-    
+                            nn_vecb_rough = cur_ct[np.argmin(dis_norm)]   
                 
                 # Generate hypothetical lattice
                 h,w = pattern.shape 
@@ -838,8 +835,7 @@ def latFit(pattern,rot_ref_ctr,r):
                     cur_h2,cur_w2 = cur_ct2+vec_a
                     if cur_h2>=0 and cur_h2<=h and cur_w2>=0 and cur_w2<=w:
                         cur_ct2 = [cur_h2,cur_w2]
-                        lat_ctr.append([cur_h2,cur_w2])     
-                        
+                        lat_ctr.append([cur_h2,cur_w2])                            
                         
                 ######### Refine Vector b #########
                 vec_b = nn_vecb_rough - set_ct
@@ -893,7 +889,7 @@ def latFit(pattern,rot_ref_ctr,r):
 # Generate 2d lattice based on vector a and b
 def genLat(pattern, ret_a,ret_b, mid_ctr,r):
     """
-    Generate a lattice of points
+    Generate a matrix of hypothetical lattice points.
 
     Parameters
     ----------
@@ -1050,7 +1046,7 @@ def drawCircles(ori_pattern,blobs_list,r):
     ----------
     ori_pattern : 2D array of int or float
         The pattern to be labeled on.
-    blobs_list : 2D array of floatss
+    blobs_list : 2D array of float
         Array of disk positions.
     r: float
         The radius of the disks.
@@ -1085,7 +1081,7 @@ def latDist(lat_par,refe_a,refe_b,err=0.2):
 
     Parameters
     ----------
-    lat_par : 2D array of arrays of floats
+    lat_par : 2D array of arrays of float
         2D array with each element as two arrays of lattice vectors.
     refe_a : 1D array of float
         The reference lattice vector a.
@@ -1149,7 +1145,6 @@ def calcStrain(lat_fil, refe_a,refe_b):
     """
     Compute strain maps.
     
-
     Parameters
     ----------
     lat_fil : 2D array of arrays of float
