@@ -228,7 +228,7 @@ def ctrRadiusIni(pattern):
             
 
 
-def genrateKernel(pattern,ctr,r,c=0.7,pad=2,pre_def = False):
+def generateKernel(pattern,ctr,r,c=0.7,pad=2,pre_def = False):
     """
     Generate the kernel for cross-correlation based on thee center disk.
 
